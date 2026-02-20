@@ -1,5 +1,5 @@
 # Comparative Evaluation
-## GenAI Tools: Claude Sonnet 4.6 vs Gemini 2.0 Flash
+## GenAI Tools: Claude Sonnet 4.6 vs Gemini 3.0 Flash
 
 **Task:** Build a Python FastAPI authentication module with SQLite, bcrypt, JWT (HS256), input validation, and tests.  
 **Date:** February 20, 2026
@@ -10,7 +10,7 @@
 
 ### 1.1 Project Structure
 
-| Aspect | Claude Sonnet 4.6 | Gemini 2.0 Flash |
+| Aspect | Claude Sonnet 4.6 | Gemini 3.0 Flash |
 |--------|-------------------|-----------------|
 | Folder layout | Dedicated `routes/`, `tests/` packages with `__init__.py` | All logic flat inside `app/`, single `tests/` file |
 | Separation of concerns | Routes isolated in `app/routes/auth.py`; auth utilities in `app/auth.py` | All route handlers defined directly in `main.py` alongside business logic |
@@ -22,7 +22,7 @@ Claude produced a layered, navigable layout. Gemini produced a flat, monolithic 
 
 ### 1.2 SQLAlchemy ORM
 
-| Aspect | Claude Sonnet 4.6 | Gemini 2.0 Flash |
+| Aspect | Claude Sonnet 4.6 | Gemini 3.0 Flash |
 |--------|-------------------|-----------------|
 | Base class | `DeclarativeBase` (SQLAlchemy 2.0, current) | `declarative_base()` from `sqlalchemy.ext.declarative` (deprecated since SQLAlchemy 1.4, removed path in 2.0) |
 | Session lifecycle | `get_db()` dependency injected per route; tables created via `asynccontextmanager` lifespan | `get_db()` present but tables created at module import time (`models.Base.metadata.create_all(bind=engine)` at top of `main.py`) |
@@ -34,7 +34,7 @@ Claude used the current SQLAlchemy 2.0 API. Gemini used a deprecated import that
 
 ### 1.3 Password Hashing
 
-| Aspect | Claude Sonnet 4.6 | Gemini 2.0 Flash |
+| Aspect | Claude Sonnet 4.6 | Gemini 3.0 Flash |
 |--------|-------------------|-----------------|
 | Library | `bcrypt` (direct, as specified in requirements) | `passlib` with `CryptContext(schemes=["pbkdf2_sha256"])` |
 | Algorithm | **bcrypt** — as required | **PBKDF2-SHA256** — does **not** meet the stated requirement |
@@ -46,7 +46,7 @@ Gemini failed to satisfy the explicit bcrypt requirement, substituting a differe
 
 ### 1.4 JWT Implementation
 
-| Aspect | Claude Sonnet 4.6 | Gemini 2.0 Flash |
+| Aspect | Claude Sonnet 4.6 | Gemini 3.0 Flash |
 |--------|-------------------|-----------------|
 | `sub` claim value | User **ID** (integer, opaque) | **Username** (string, exposes internal data) |
 | Token decode location | Isolated `decode_access_token()` in `auth.py` | Inline inside `get_current_user()` in `main.py` |
@@ -59,7 +59,7 @@ Gemini hardcoded a trivially guessable secret key directly in source. This is a 
 
 ### 1.5 Pydantic Schemas
 
-| Aspect | Claude Sonnet 4.6 | Gemini 2.0 Flash |
+| Aspect | Claude Sonnet 4.6 | Gemini 3.0 Flash |
 |--------|-------------------|-----------------|
 | Pydantic API version | v2 — `field_validator`, `model_config = {"from_attributes": True}`, `model_validate()` | Mixed — `class Config: from_attributes = True` (v1 style, works in v2 but deprecated) |
 | Input validation | `username` length (3–30), alphanumeric regex, password min-length all enforced via `field_validator` | No password strength validation; no username format rules |
@@ -71,7 +71,7 @@ Claude applied meaningful, documented constraints. Gemini applied no constraints
 
 ### 1.6 HTTP Status Codes
 
-| Endpoint | Claude Sonnet 4.6 | Gemini 2.0 Flash | Correct code |
+| Endpoint | Claude Sonnet 4.6 | Gemini 3.0 Flash | Correct code |
 |----------|-------------------|-----------------|:------------:|
 | Register success | `201 Created` | `201 Created` | ✓ |
 | Duplicate email/username | `409 Conflict` | `400 Bad Request` | 409 |
@@ -85,7 +85,7 @@ Gemini used `400` for duplicate registration instead of the semantically correct
 
 ### 1.7 Security Practices
 
-| Practice | Claude Sonnet 4.6 | Gemini 2.0 Flash |
+| Practice | Claude Sonnet 4.6 | Gemini 3.0 Flash |
 |----------|-------------------|-----------------|
 | User enumeration prevention | Single `"Incorrect email or password"` message for both bad email and bad password | Separate message `"Incorrect username or password"` — acceptable but exposes the login field is username |
 | Secret key in source | Never — env var only | **Yes — hardcoded** `"SUPER_SECRET_KEY"` |
@@ -96,7 +96,7 @@ Gemini used `400` for duplicate registration instead of the semantically correct
 
 ### 1.8 Test Quality
 
-| Aspect | Claude Sonnet 4.6 | Gemini 2.0 Flash |
+| Aspect | Claude Sonnet 4.6 | Gemini 3.0 Flash |
 |--------|-------------------|-----------------|
 | Framework | `pytest` with `httpx` | Script-based (`python test_bug.py`) |
 | Isolation | Each test gets a **fresh in-memory SQLite DB** via `StaticPool` + `dependency_overrides` | Single shared `TestClient` — state bleeds between runs |
@@ -113,7 +113,7 @@ Gemini's test cannot fail. Every run exits 0 regardless of what the server retur
 
 ### 2.1 Adherence to Explicit Requirements
 
-| Requirement stated in prompt | Claude Sonnet 4.6 | Gemini 2.0 Flash |
+| Requirement stated in prompt | Claude Sonnet 4.6 | Gemini 3.0 Flash |
 |------------------------------|:-----------------:|:----------------:|
 | `POST /auth/register` | ✓ | ✓ |
 | `POST /auth/login` | ✓ | ✓ |
@@ -156,7 +156,7 @@ Gemini was not iteratively prompted in this session — only a single generation
 
 All limitations were explicitly identified, documented, and given concrete fix recommendations.
 
-### Gemini 2.0 Flash
+### Gemini 3.0 Flash
 
 | Limitation | Detail |
 |------------|--------|
@@ -179,7 +179,7 @@ Most Gemini limitations are **silent** — no documentation, no warning, no sugg
 
 ### 4.1 Code Volume and Completeness
 
-| Metric | Claude Sonnet 4.6 | Gemini 2.0 Flash |
+| Metric | Claude Sonnet 4.6 | Gemini 3.0 Flash |
 |--------|:-----------------:|:----------------:|
 | Source files generated | 9 | 7 |
 | Lines of application code (approx.) | ~230 | ~130 |
@@ -189,7 +189,7 @@ Most Gemini limitations are **silent** — no documentation, no warning, no sugg
 
 ### 4.2 Correctness on First Pass
 
-| Check | Claude Sonnet 4.6 | Gemini 2.0 Flash |
+| Check | Claude Sonnet 4.6 | Gemini 3.0 Flash |
 |-------|:-----------------:|:----------------:|
 | Server starts without modification | ✓ | ✓ |
 | All explicit requirements met | ✓ | ✗ (bcrypt, validation, status codes) |
@@ -200,7 +200,7 @@ Most Gemini limitations are **silent** — no documentation, no warning, no sugg
 
 ### 4.3 Documentation Quality
 
-| Aspect | Claude Sonnet 4.6 | Gemini 2.0 Flash |
+| Aspect | Claude Sonnet 4.6 | Gemini 3.0 Flash |
 |--------|:-----------------:|:----------------:|
 | Setup instructions | Step-by-step with Windows-specific notes | 3-line pip + uvicorn |
 | API reference table | Full table + per-endpoint request/response schemas | Feature list only |
@@ -212,7 +212,7 @@ Most Gemini limitations are **silent** — no documentation, no warning, no sugg
 
 ## 5. Summary
 
-| Criterion | Claude Sonnet 4.6 | Gemini 2.0 Flash |
+| Criterion | Claude Sonnet 4.6 | Gemini 3.0 Flash |
 |-----------|:-----------------:|:----------------:|
 | **Output Quality** | Production-grade structure, modern APIs, no silent deviations | Functional prototype, silent requirement deviations, deprecated APIs |
 | **Prompt Sensitivity** | Accurately followed all 12 requirements; iterated faithfully on follow-ups | Missed 3 explicit requirements silently; no iteration tested |
@@ -223,6 +223,6 @@ Most Gemini limitations are **silent** — no documentation, no warning, no sugg
 
 **Claude Sonnet 4.6** produced a solution that is deployable as-is (with the acknowledged caveats around rate limiting and secret key), follows current library best-practices, and documents its own shortcomings clearly.
 
-**Gemini 2.0 Flash** produced a working proof-of-concept that correctly assembles the required endpoints, but deviates from the stated bcrypt requirement, hardcodes a secret key, uses deprecated library APIs, and provides no real test coverage. It is suitable as a starting scaffold requiring significant revision before production use.
+**Gemini 3.0 Flash** produced a working proof-of-concept that correctly assembles the required endpoints, but deviates from the stated bcrypt requirement, hardcodes a secret key, uses deprecated library APIs, and provides no real test coverage. It is suitable as a starting scaffold requiring significant revision before production use.
 
 For tasks demanding strict requirement adherence, security awareness, and production-readiness, **Claude Sonnet 4.6 performed materially better on this workload**.
